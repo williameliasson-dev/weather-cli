@@ -6,8 +6,9 @@ mod weather;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let weather_data = WeatherData::get_weather_data().await?;
+    let weather_data = WeatherData::construct_weather_data().await?;
 
-    println!("{:?}", weather_data);
+    println!("{:?}", weather_data.current.temperature_2m);
+
     Ok(())
 }

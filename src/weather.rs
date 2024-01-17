@@ -1,4 +1,4 @@
-use chrono;
+use chrono::{self, Duration, DurationRound, SubsecRound};
 use iso8601;
 use reqwest::Error;
 use serde::{Deserialize, Serialize};
@@ -52,10 +52,14 @@ fn get_correct_date_time(weatherdata: &WeatherData) -> Result<String, ()> {
                 .as_str(),
         )
         .unwrap()
-        .format("%Y-%m-%d %H:%M:%S")
+        .format("%Y-%m-%d %H")
         .to_string();
 
-        let current_date_in_iso = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        let current_date_in_iso = chrono::Utc::now()
+            .duration_round(Duration::hours(1))
+            .unwrap()
+            .format("%Y-%m-%d %H")
+            .to_string();
         println!("{date_string_in_iso}");
         println!("{current_date_in_iso}");
         if date_string_in_iso == current_date_in_iso {

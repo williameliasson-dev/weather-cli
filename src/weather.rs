@@ -37,33 +37,39 @@ impl WeatherData {
     }
 
     pub fn get_weather_4h_future(&self) {
-        let current_date_time = get_correct_date_time(&self);
+        let current_date_time = get_future_weather(&self);
 
         println!("{:?}", current_date_time)
     }
 }
 
-fn get_correct_date_time(weatherdata: &WeatherData) -> Result<String, ()> {
-    for date_time in weatherdata.hourly.time.iter() {
-        let date_string_in_iso = chrono::DateTime::parse_from_rfc3339(
-            iso8601::datetime(date_time)
+fn get_future_weather(weatherdata: &WeatherData) -> Result<String, ()> {
+    let current_date_in_millis = chrono::Utc::now()
+        .duration_round(Duration::hours(1))
+        .unwrap()
+        .timestamp_millis();
+
+    for date_time in &weatherdata.hourly.time {
+        let date_in_millis = chrono::DateTime::parse_from_rfc3339(
+            iso8601::datetime(&date_time.to_owned())
                 .expect("Error when converting date to ISO8601")
                 .to_string()
                 .as_str(),
         )
         .unwrap()
-        .format("%Y-%m-%d %H")
-        .to_string();
+        .timestamp_millis();
 
-        let current_date_in_iso = chrono::Utc::now()
-            .duration_round(Duration::hours(1))
-            .unwrap()
-            .format("%Y-%m-%d %H")
-            .to_string();
-        println!("{date_string_in_iso}");
-        println!("{current_date_in_iso}");
-        if date_string_in_iso == current_date_in_iso {
-            return Ok(date_string_in_iso);
+        if date_in_millis >= current_date_in_millis {
+            let ts_secs = date_in_millis / 1000;
+            let ts_ns = (date_in_millis % 1000) * 1_000_000;
+
+            println!(
+                "{:?}",
+                chrono::DateTime::from_timestamp(ts_secs, ts_ns as u32)
+                    .unwrap()
+                    .to_rfc3339()
+                    .to_string()
+            );
         }
     }
 

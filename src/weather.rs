@@ -1,3 +1,5 @@
+use chrono;
+use iso8601;
 use reqwest::Error;
 use serde::{Deserialize, Serialize};
 
@@ -5,7 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct Current {
     pub time: String,
     pub temperature_2m: f32,
-    wind_speed_10m: f32,
+    pub wind_speed_10m: f32,
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Hourly {
@@ -33,4 +35,33 @@ impl WeatherData {
 
         Ok(weather_data)
     }
+
+    pub fn get_weather_4h_future(&self) {
+        let current_date_time = get_correct_date_time(&self);
+
+        println!("{:?}", current_date_time)
+    }
+}
+
+fn get_correct_date_time(weatherdata: &WeatherData) -> Result<String, ()> {
+    for date_time in weatherdata.hourly.time.iter() {
+        let date_string_in_iso = chrono::DateTime::parse_from_rfc3339(
+            iso8601::datetime(date_time)
+                .expect("Error when converting date to ISO8601")
+                .to_string()
+                .as_str(),
+        )
+        .unwrap()
+        .format("%Y-%m-%d %H:%M:%S")
+        .to_string();
+
+        let current_date_in_iso = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+        println!("{date_string_in_iso}");
+        println!("{current_date_in_iso}");
+        if date_string_in_iso == current_date_in_iso {
+            return Ok(date_string_in_iso);
+        }
+    }
+
+    Err(())
 }

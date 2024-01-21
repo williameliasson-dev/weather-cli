@@ -1,4 +1,4 @@
-use chrono::{self, Duration, DurationRound, SubsecRound};
+use chrono::{self, Duration, DurationRound};
 use iso8601;
 use reqwest::Error;
 use serde::{Deserialize, Serialize};

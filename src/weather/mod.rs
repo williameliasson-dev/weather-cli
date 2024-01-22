@@ -1,8 +1,13 @@
-use chrono::{self, Duration, DurationRound};
+use chrono::{self, Duration, DurationRound, Utc};
 use iso8601;
 use reqwest::Error;
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug)]
+pub struct SingleData {
+    pub date_time: chrono::DateTime<Utc>,
+    pub temperature_2m: f32,
+}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Current {
     pub time: String,
@@ -23,7 +28,7 @@ pub struct WeatherData {
 }
 
 impl WeatherData {
-    pub async fn construct_weather_data() -> Result<WeatherData, Error> {
+    pub async fn new() -> Result<WeatherData, Error> {
         let api_link = "https://api.open-meteo.com/v1/forecast?latitude=59.33&longitude=18.06&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m";
 
         let weather_data: WeatherData = reqwest::Client::new()
@@ -36,13 +41,20 @@ impl WeatherData {
         Ok(weather_data)
     }
 
-    pub fn get_weather_4h_future(&self) {
+    pub fn get_weather_4h_future(&self) -> Vec<SingleData> {
+        let mut future_weather: Vec<SingleData> = Vec::new();
+
         let current_date_in_millis = chrono::Utc::now()
             .duration_round(Duration::hours(1))
             .unwrap()
             .timestamp_millis();
 
         for (i, date_time) in self.hourly.time.iter().enumerate() {
+            // TODO: Make int here configurable
+            if future_weather.len() > 5 {
+                break;
+            }
+
             let date_in_millis = chrono::DateTime::parse_from_rfc3339(
                 iso8601::datetime(&date_time.to_owned())
                     .expect("Error when converting date to ISO8601")
@@ -56,15 +68,15 @@ impl WeatherData {
                 let ts_secs = date_in_millis / 1000;
                 let ts_ns = (date_in_millis % 1000) * 1_000_000;
 
-                println!(
-                    "{:?} {:?}",
-                    chrono::DateTime::from_timestamp(ts_secs, ts_ns as u32)
-                        .unwrap()
-                        .to_rfc3339()
-                        .to_string(),
-                    self.hourly.temperature_2m[i]
-                );
+                let date_time = chrono::DateTime::from_timestamp(ts_secs, ts_ns as u32)
+                    .expect("Error converting millis to chrono DateTime");
+
+                future_weather.push(SingleData {
+                    date_time,
+                    temperature_2m: self.hourly.temperature_2m[i],
+                });
             }
         }
+        return future_weather;
     }
 }

@@ -3,6 +3,8 @@ use iso8601;
 use reqwest::Error;
 use serde::{Deserialize, Serialize};
 
+pub mod ascii_art;
+
 #[derive(Debug)]
 pub struct SingleData {
     pub date_time: chrono::DateTime<Utc>,

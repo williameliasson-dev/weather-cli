@@ -43,7 +43,7 @@ impl WeatherData {
         Ok(weather_data)
     }
 
-    pub fn get_weather_4h_future(&self) -> Vec<SingleData> {
+    pub fn get_weather_future(&self, hours: usize) -> Vec<SingleData> {
         let mut future_weather: Vec<SingleData> = Vec::new();
 
         let current_date_in_millis = chrono::Utc::now()
@@ -53,7 +53,7 @@ impl WeatherData {
 
         for (i, date_time) in self.hourly.time.iter().enumerate() {
             // TODO: Make int here configurable
-            if future_weather.len() > 5 {
+            if future_weather.len() > hours {
                 break;
             }
 
